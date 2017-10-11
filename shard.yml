@@ -1,0 +1,10 @@
+name: semantic_compare
+version: 0.1.0
+
+authors:
+  - Julien Reichardt <mi@jrei.ch>
+
+description: |
+  Compare semver versions using semantic expressions
+
+license: ISC
