@@ -3,17 +3,18 @@ require "semantic_version"
 class SemanticCompare
   def self.expression(ver0 : String, expression : String)
     expression.to_s.split(" || ").each do |part|
-      array = part.to_s.split(" ")
-      # If it's a tilde range
+      # If it's a hyphen range
       if part =~ /.* - .*/
-        puts part
         return true if version(ver0, expression)
-      elsif array[2]?
-        raise "no more than two conditions are allowed in an expression: add an 'or' sign `||` before \"#{array[0]}\""
-      elsif array[1]?
-        return true if version(ver0, array[0]) && version(ver0, array[1])
       else
-        return true if version(ver0, array[0])
+        array = part.to_s.split(" ")
+        if array[2]?
+          raise "no more than two conditions are allowed in an expression: add an 'or' sign `||` before \"#{array[0]}\""
+        elsif array[1]?
+          return true if version(ver0, array[0]) && version(ver0, array[1])
+        else
+          return true if version(ver0, array[0])
+        end
       end
     end
   end
