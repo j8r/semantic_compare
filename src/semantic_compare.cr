@@ -19,32 +19,35 @@ class SemanticCompare
     end
   end
   # Compare versions without ||
+  macro compare(version, sign, expr)
+    SemanticVersion.parse({{version}}) {{sign.id}} SemanticVersion.parse({{expr}})
+  end
+  macro double_compare(expr, version, expr1)
+    SemanticVersion.parse({{expr}}) <= SemanticVersion.parse({{version}}) < SemanticVersion.parse({{expr1}})
+  end
+
   def self.version(ver0 : String, expr : String)
     case expr
     # Caret Ranges
     when /^\^0\.0\..*/
-       SemanticVersion.parse(expr[1..-1]) <= SemanticVersion.parse(ver0) < SemanticVersion.parse("0.0.#{expr.split(".")[2].to_i + 1}")
+       double_compare expr[1..-1], ver0, "0.0.#{expr.split(".")[2].to_i + 1}"
     when /^\^0\..*/
-      SemanticVersion.parse(expr[1..-1]) <= SemanticVersion.parse(ver0) < SemanticVersion.parse("0.#{expr.split(".")[1].to_i + 1}.0")
+      double_compare expr[1..-1], ver0, "0.#{expr.split(".")[1].to_i + 1}.0"
     when /^\^.*/
-      SemanticVersion.parse(expr[1..-1]) <= SemanticVersion.parse(ver0) < SemanticVersion.parse("#{expr[1..-1].split(".")[0].to_i + 1}.0.0")
+      double_compare expr[1..-1], ver0, "#{expr[1..-1].split(".")[0].to_i + 1}.0.0"
     # Tilde Ranges
     when /~.*/
-      SemanticVersion.parse(expr[1..-1]) <= SemanticVersion.parse(ver0) < SemanticVersion.parse("#{expr[1..-1].split(".")[0]}.#{expr.split(".")[1].to_i + 1}.0")
+      double_compare expr[1..-1], ver0, "#{expr[1..-1].split(".")[0]}.#{expr.split(".")[1].to_i + 1}.0"
     # Hyphen Ranges
     when /.* - .*/
       SemanticVersion.parse(expr.split(" - ")[0]) <= SemanticVersion.parse(ver0) <= SemanticVersion.parse(expr.split(" - ")[1])
     # Comparisons
-    when /^>=.*/
-      SemanticVersion.parse(ver0) >= SemanticVersion.parse(expr[2..-1])
-    when /^<=.*/
-      SemanticVersion.parse(ver0) <= SemanticVersion.parse(expr[2..-1])
-    when /^\<.*/
-      SemanticVersion.parse(ver0) < SemanticVersion.parse(expr[1..-1])
-    when /^\>.*/
-      SemanticVersion.parse(ver0) > SemanticVersion.parse(expr[1..-1])
+    when /^>=.*/ then compare ver0, ">=", expr[2..-1]
+    when /^<=.*/ then compare ver0, "<=", expr[2..-1]
+    when /^\<.*/ then compare ver0, "<",  expr[1..-1]
+    when /^\>.*/ then compare ver0, ">",  expr[1..-1]
     else
-      SemanticVersion.parse(ver0) == SemanticVersion.parse(expr)
+      compare ver0, "==", expr
     end
   end
 end
