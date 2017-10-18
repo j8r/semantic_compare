@@ -1,6 +1,6 @@
 require "semantic_version"
 
-class SemanticCompare
+module SemanticCompare
   def self.expression(ver0 : String, expression : String)
     expression.to_s.split(" || ").each do |part|
       # If it's a hyphen range
