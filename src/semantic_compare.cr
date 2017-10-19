@@ -27,25 +27,25 @@ module SemanticCompare
   end
 
   def self.version(ver0 : String, expr : String)
-    case expr
+    case
     # Caret Ranges
-    when /^\^0\.0\..*/
+    when expr.starts_with?("^0.0.")
        double_compare expr, ver0, "0.0.#{expr.split(".")[2].to_i + 1}"
-    when /^\^0\..*/
+    when expr.starts_with?("^0.")
       double_compare expr, ver0, "0.#{expr.split(".")[1].to_i + 1}.0"
-    when /^\^.*/
+    when expr.starts_with?("^")
       double_compare expr, ver0, "#{expr[1..-1].split(".")[0].to_i + 1}.0.0"
     # Tilde Ranges
-    when /~.*/
+    when expr.starts_with?("~")
       double_compare expr, ver0, "#{expr[1..-1].split(".")[0]}.#{expr.split(".")[1].to_i + 1}.0"
     # Hyphen Ranges
-    when /.* - .*/
+    when expr =~ /.* - .*/
       compare(expr.split(" - ")[0], "<=", ver0) && compare(ver0, "<=", expr.split(" - ")[1])
     # Comparisons
-    when /^>=.*/ then compare ver0, ">=", expr[2..-1]
-    when /^<=.*/ then compare ver0, "<=", expr[2..-1]
-    when /^\<.*/ then compare ver0, "<",  expr[1..-1]
-    when /^\>.*/ then compare ver0, ">",  expr[1..-1]
+    when expr.starts_with?(">=") then compare ver0, ">=", expr[2..-1]
+    when expr.starts_with?("<=") then compare ver0, "<=", expr[2..-1]
+    when expr.starts_with?("<") then compare ver0, "<",  expr[1..-1]
+    when expr.starts_with?(">") then compare ver0, ">",  expr[1..-1]
     else
       compare ver0, "==", expr
     end
