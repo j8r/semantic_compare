@@ -18,10 +18,12 @@ module SemanticCompare
       end
     end
   end
+
   # Compare versions without ||
   macro compare(version, sign, expr)
     SemanticVersion.parse({{version}}) {{sign.id}} SemanticVersion.parse({{expr}})
   end
+
   macro double_compare(expr, version, expr1)
     SemanticVersion.parse({{expr}}[1..-1]) <= SemanticVersion.parse({{version}}) < SemanticVersion.parse({{expr1}})
   end
@@ -30,22 +32,22 @@ module SemanticCompare
     case
     # Caret Ranges
     when expr.starts_with?("^0.0.")
-       double_compare expr, ver0, "0.0.#{expr.split(".")[2].to_i + 1}"
+      double_compare expr, ver0, "0.0.#{expr.split(".")[2].to_i + 1}"
     when expr.starts_with?("^0.")
       double_compare expr, ver0, "0.#{expr.split(".")[1].to_i + 1}.0"
     when expr.starts_with?("^")
       double_compare expr, ver0, "#{expr[1..-1].split(".")[0].to_i + 1}.0.0"
-    # Tilde Ranges
+      # Tilde Ranges
     when expr.starts_with?("~")
       double_compare expr, ver0, "#{expr[1..-1].split(".")[0]}.#{expr.split(".")[1].to_i + 1}.0"
-    # Hyphen Ranges
+      # Hyphen Ranges
     when expr =~ /.* - .*/
       compare(expr.split(" - ")[0], "<=", ver0) && compare(ver0, "<=", expr.split(" - ")[1])
-    # Comparisons
+      # Comparisons
     when expr.starts_with?(">=") then compare ver0, ">=", expr[2..-1]
     when expr.starts_with?("<=") then compare ver0, "<=", expr[2..-1]
-    when expr.starts_with?("<") then compare ver0, "<",  expr[1..-1]
-    when expr.starts_with?(">") then compare ver0, ">",  expr[1..-1]
+    when expr.starts_with?("<")  then compare ver0, "<", expr[1..-1]
+    when expr.starts_with?(">")  then compare ver0, ">", expr[1..-1]
     else
       compare ver0, "==", expr
     end
