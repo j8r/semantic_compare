@@ -1,10 +1,9 @@
 name: semantic_compare
-version: 0.3.1
+version: 0.3.2
 
 authors:
   - Julien Reichardt <mi@jrei.ch>
 
-description: |
-  Compare semver versions using semantic expressions
+description: Compare semver versions using semantic expressions
 
 license: ISC

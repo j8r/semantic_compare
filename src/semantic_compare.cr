@@ -2,20 +2,20 @@ require "semantic_version"
 
 module SemanticCompare
   def self.expression(main_version : String, expression : String)
-    expression.to_s.split(" || ").each do |part|
+    expression.split(" || ").each do |part|
       # Hyphen ranges
       if part.includes? " - "
-        parts = part.split " - "
-        return true if compare(parts[0], "<=", main_version) && compare(main_version, "<=", parts[1])
+        part1, part2 = part.split " - "
+        return true if compare(part1, "<=", main_version) && compare(main_version, "<=", part2)
       else
-        array = part.to_s.split ' '
+        array = part.split ' '
         case array.size
+        when 1
+          return true if version main_version, array[0]
         when 2
           return true if version(main_version, array[0]) && version main_version, array[1]
-        when 3
-          raise "no more than two conditions are allowed in an expression: add an 'or' sign `||` before " + array[2]
         else
-          return true if version main_version, array[0]
+          raise "no more than two conditions are allowed in an expression: add an 'or' sign between expressions like `#{array[0]} #{array[1]} || #{array[2]}`"  
         end
       end
     end
@@ -27,30 +27,30 @@ module SemanticCompare
   end
 
   macro double_compare(first_expr, version, second_expr)
-    SemanticVersion.parse({{first_expr}}[1..-1]) <= SemanticVersion.parse({{version}}) < SemanticVersion.parse {{second_expr}}
+    SemanticVersion.parse({{first_expr}}.lchop) <= SemanticVersion.parse({{version}}) < SemanticVersion.parse {{second_expr}}
   end
 
   def self.version(main_version : String, expr : String)
-    case
+    case expr
     # Caret Ranges
-    when expr.starts_with? "^0.0."
+    when .starts_with? "^0.0."
       double_compare expr, main_version, "0.0.#{expr.split('.')[2].to_i + 1}"
-    when expr.starts_with? "^0."
+    when .starts_with? "^0."
       double_compare expr, main_version, "0.#{expr.split('.')[1].to_i + 1}.0"
-    when expr.starts_with? '^'
-      double_compare expr, main_version, "#{expr[1..-1].split('.')[0].to_i + 1}.0.0"
+    when .starts_with? '^'
+      double_compare expr, main_version, "#{expr.lchop.split('.')[0].to_i + 1}.0.0"
       # Tilde Ranges
-    when expr.starts_with? '~'
-      double_compare expr, main_version, "#{expr[1..-1].split('.')[0]}.#{expr.split('.')[1].to_i + 1}.0"
+    when .starts_with? '~'
+      double_compare expr, main_version, "#{expr.lchop.split('.')[0]}.#{expr.split('.')[1].to_i + 1}.0"
       # Hyphen ranges
-    when expr.includes? " - "
-      parts = expr.split " - "
-      compare(parts[0], "<=", main_version) && compare(main_version, "<=", parts[1])
+    when .includes? " - "
+      part1, part2 = expr.split " - "
+      compare(part1, "<=", main_version) && compare(main_version, "<=", part2)
       # Comparisons
-    when expr.starts_with? ">=" then compare main_version, ">=", expr[2..-1]
-    when expr.starts_with? "<=" then compare main_version, "<=", expr[2..-1]
-    when expr.starts_with? '<'  then compare main_version, '<', expr[1..-1]
-    when expr.starts_with? '>'  then compare main_version, '>', expr[1..-1]
+    when .starts_with? ">=" then compare main_version, ">=", expr[2..-1]
+    when .starts_with? "<=" then compare main_version, "<=", expr[2..-1]
+    when .starts_with? '<'  then compare main_version, '<', expr.lchop
+    when .starts_with? '>'  then compare main_version, '>', expr.lchop
     else
       compare main_version, "==", expr
     end
