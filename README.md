@@ -1,14 +1,14 @@
 # SemanticCompare
 
-Compare semver versions using semantic expressions
+Compare semver versions using semantic expressions.
 
 Most of the [npm's semver implementation](https://www.npmjs.com/package/semver) expressions are supported.
 
-Only true semantic version numbers are allowed, with at least a major, minor and patch number (e.g. `1.2.3`)
+This library is based on stdlib's [SemanticVersion](https://crystal-lang.org/api/master/SemanticVersion.html).
 
 ## Installation
 
-Add this block to your application's `shard.yml`:
+Add the dependency to your `shard.yml`:
 
 ```yaml
 dependencies:
@@ -18,18 +18,17 @@ dependencies:
 
 ## Usage
 
-### Compare with simple expressions
-
 ```crystal
-SemanticCompare.version "1.2.3", "1.2.0 - 1.4.0"
-```
+require "semantic_compare"
 
-### Compare with 'or' `||` signs
+# Compare with simple expressions
+semantic_version = SemanticVersion.new "1.2.3"
+SemanticCompare.version semantic_version, "1.2.0 - 1.4.0"
 
-```crystal
+# Compare with 'or' `||` signs
 SemanticCompare.expression "1.2.3", ">=1.0.4 || <2.0.0 || ~1.2.1"
 ```
 
 ## License
 
-Copyright (c) 2017 Julien Reichardt - ISC License
+Copyright (c) 2017-2019 Julien Reichardt - ISC License
