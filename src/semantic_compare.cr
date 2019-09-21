@@ -1,57 +1,76 @@
 require "semantic_version"
 
 module SemanticCompare
-  def self.expression(semantic_version : SemanticVersion, expression : String)
-    expression.split(" || ").each do |part|
+  extend self
+
+  # Returns true if a version matches the complex expression, which can include "or" `||` signs.
+  # ```
+  # semantic_version = SemanticVersion.parse "1.2.3"
+  # SemanticCompare.complex_expression semantic_version, ">=1.0.4 || <2.0.0 || ~1.2.1" # => true
+  # ```
+  def complex_expression(semantic_version : SemanticVersion, expression : String) : Bool
+    expression.split " || " do |parts|
       # Hyphen ranges
-      if part.includes? " - "
-        part1, part2 = part.split " - "
-        return true if compare(semantic_version, ">", part1) && compare(semantic_version, "<=", part2)
+      if parts.includes? " - "
+        return true if hyphen_range semantic_version, parts
       else
-        array = part.split ' '
-        case array.size
-        when 1
-          return true if version semantic_version, array[0]
-        when 2
-          return true if version(semantic_version, array[0]) && version semantic_version, array[1]
+        part1, _, part2 = parts.partition ' '
+        if part2.empty?
+          return true if simple_expression semantic_version, part1
         else
-          raise "no more than two conditions are allowed in an expression: add an 'or' sign between expressions like `#{array[0]} #{array[1]} || #{array[2]}`"
+          return true if simple_expression(semantic_version, part1) && simple_expression(semantic_version, part2)
         end
       end
     end
+    true
   end
 
-  # Compare versions without ||
-  macro compare(semantic_version, sign, expr)
-    {{semantic_version.id}} {{sign.id}} SemanticVersion.parse {{expr}}
+  private macro compare(semantic_version, sign, expr)
+    semantic_version {{sign.id}} SemanticVersion.parse {{expr}}
   end
 
-  macro double_compare(first_expr, semantic_version, second_expr)
-    SemanticVersion.parse({{first_expr}}.lchop) <= {{semantic_version.id}} < SemanticVersion.parse {{second_expr}}
+  private macro double_compare(first_expr, semantic_version, second_expr)
+    SemanticVersion.parse({{first_expr}}.lchop) <= semantic_version < SemanticVersion.parse {{second_expr}}
   end
 
-  def self.version(semantic_version : SemanticVersion, expr : String)
-    case expr
-    # Caret Ranges
-    when .starts_with? "^0.0."
-      double_compare expr, semantic_version, "0.0.#{expr.split('.')[2].to_i + 1}"
-    when .starts_with? "^0."
-      double_compare expr, semantic_version, "0.#{expr.split('.')[1].to_i + 1}.0"
-    when .starts_with? '^'
-      double_compare expr, semantic_version, "#{expr.lchop.split('.')[0].to_i + 1}.0.0"
+  private def hyphen_range(semantic_version : SemanticVersion, expression : String) : Bool
+    part1, _, part2 = expression.partition " - "
+    compare(semantic_version, '>', part1) && compare(semantic_version, "<=", part2)
+  end
+
+  # Returns true if a version matches the simple expression.
+  #
+  # ```
+  # semantic_version = SemanticVersion.parse "1.2.3"
+  # SemanticCompare.simple_expression semantic_version, "<1.5.0"        # => true
+  # SemanticCompare.simple_expression semantic_version, "1.2.0 - 1.4.0" # => true
+  # ```
+  def simple_expression(semantic_version : SemanticVersion, expression : String) : Bool
+    # Hyphen range
+    if expression.includes? " - "
+      hyphen_range semantic_version, expression
+      # Caret Ranges
+    elsif stripped_expr = expression.lchop? "^0.0."
+      double_compare expression, semantic_version, "0.0.#{stripped_expr.to_i + 1}"
+    elsif stripped_expr = expression.lchop? "^0."
+      double_compare expression, semantic_version, "0.#{stripped_expr.partition('.')[0].to_i + 1}.0"
+    elsif stripped_expr = expression.lchop? '^'
+      double_compare expression, semantic_version, "#{stripped_expr.partition('.')[0].to_i + 1}.0.0"
       # Tilde Ranges
-    when .starts_with? '~'
-      double_compare expr, semantic_version, "#{expr.lchop.split('.')[0]}.#{expr.split('.')[1].to_i + 1}.0"
-      # Hyphen ranges
-    when .includes? " - "
-      part1, part2 = expr.split " - "
-      compare(semantic_version, ">", part1) && compare(semantic_version, "<=", part2)
+    elsif stripped_expr = expression.lchop? '~'
+      part1, _, part2 = stripped_expr.partition '.'
+      double_compare expression, semantic_version, "#{part1}.#{part2.partition('.')[0].to_i + 1}.0"
       # Comparisons
-    when .starts_with? ">=" then compare semantic_version, ">=", expr[2..-1]
-    when .starts_with? "<=" then compare semantic_version, "<=", expr[2..-1]
-    when .starts_with? '<'  then compare semantic_version, '<', expr.lchop
-    when .starts_with? '>'  then compare semantic_version, '>', expr.lchop
-    else                         compare semantic_version, "==", expr
+    elsif stripped_expr = expression.lchop? ">="
+      compare semantic_version, ">=", stripped_expr
+    elsif stripped_expr = expression.lchop? "<="
+      compare semantic_version, "<=", stripped_expr
+    elsif stripped_expr = expression.lchop? '>'
+      compare semantic_version, '>', stripped_expr
+    elsif stripped_expr = expression.lchop? '<'
+      compare semantic_version, '<', stripped_expr
+    else
+      compare semantic_version, "==", expression
     end
   end
 end
