@@ -1,10 +1,17 @@
 # SemanticCompare
 
+[![Build Status](https://cloud.drone.io/api/badges/j8r/semantic_compare/status.svg)](https://cloud.drone.io/j8r/semantic_compare)
+[![ISC](https://img.shields.io/badge/License-ISC-blue.svg?style=flat-square)](https://en.wikipedia.org/wiki/ISC_license)
+
 Compare semver versions using semantic expressions.
 
 Most of the [npm's semver implementation](https://www.npmjs.com/package/semver) expressions are supported.
 
 This library is based on stdlib's [SemanticVersion](https://crystal-lang.org/api/master/SemanticVersion.html).
+
+## Documentation
+
+https://j8r.github.io/semantic_compare
 
 ## Installation
 
