@@ -29,8 +29,8 @@ module SemanticCompare
     semantic_version {{sign.id}} SemanticVersion.parse {{expr}}
   end
 
-  private macro double_compare(first_expr, semantic_version, second_expr)
-    SemanticVersion.parse({{first_expr}}.lchop) <= semantic_version < SemanticVersion.parse {{second_expr}}
+  private def double_compare(first_expr : String, semantic_version : SemanticVersion, second_expr : String)
+    SemanticVersion.parse(first_expr.lchop) <= semantic_version < SemanticVersion.parse second_expr
   end
 
   private def hyphen_range(semantic_version : SemanticVersion, expression : String) : Bool
