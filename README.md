@@ -47,4 +47,4 @@ SemanticCompare.complex_expression semantic_version, ">=1.0.4 || <2.0.0 || ~1.2.
 
 ## License
 
-Copyright (c) 2017-2019 Julien Reichardt - ISC License
+Copyright (c) 2017-2020 Julien Reichardt - ISC License
