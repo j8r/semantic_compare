@@ -31,6 +31,7 @@ dependencies:
 require "semantic_compare"
 
 semantic_version = SemanticVersion.new "1.2.3"
+
 SemanticCompare.simple_expression semantic_version, "<1.5.0"        #=> true
 SemanticCompare.simple_expression semantic_version, "1.2.0 - 1.4.0" #=> true
 ```
@@ -42,6 +43,7 @@ require "semantic_compare"
 # Compare with simple expressions
 semantic_version = SemanticVersion.new "1.2.3"
 
+SemanticCompare.complex_expression semantic_version, ">1.2.3 <2.0.0"               #=> true
 SemanticCompare.complex_expression semantic_version, ">=1.0.4 || <2.0.0 || ~1.2.1" #=> true
 ```
 

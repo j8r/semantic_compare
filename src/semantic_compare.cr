@@ -22,7 +22,7 @@ module SemanticCompare
         end
       end
     end
-    true
+    false
   end
 
   private macro compare(semantic_version, sign, expr)
